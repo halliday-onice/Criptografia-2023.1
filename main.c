@@ -85,9 +85,9 @@ void EncOFB(uint8_t Ivec[16],uint8_t key[16],char *fileNameInput,char *fileNameO
         // esse keepremain vai guardar o quanto de bytes faltam pra chegarmos 
         //ate o fim do arquivo
 
-        uint8_t output[16];
-        uint8_t input[16];
-        uint8_t writeOnEncFile[16]; // precisamos guardar o texto cifrado pra poder escrever no arquivo o bloco de 16 bytes
+        uint8_t output[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+        uint8_t input[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+        uint8_t writeOnEncFile[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; // precisamos guardar o texto cifrado pra poder escrever no arquivo o bloco de 16 bytes
     
         //printf("Antes do strcpy((char*)input,(char*)output)\n");
         strncpy((char*)input,(char*)output,16);
@@ -108,27 +108,54 @@ void EncOFB(uint8_t Ivec[16],uint8_t key[16],char *fileNameInput,char *fileNameO
             puts("Entrou no for");
             // precisamos comecar a criptografar
             AES128_Encrypt(input,key,output);
-            puts("saiu do AES");
+            //puts("saiu do AES");
             strncpy((char*)input,(char*)output,16); // nos estamos preparando o input pra proxima interacao, o output vai ser o input da proxima interacao
-            puts("Antes do fread, chegou?");
+            puts("\n");
+            printf("input: %s\n",(char *)input);
+            puts("Antes do fread, chegou?\n");
             // como estamos copiando o output no input, em fread nos podemos usar o output - onde vamos guardar(o buffer, basicamente)
             fread(output,1,16,inputFile);
-
             XorBlock(writeOnEncFile,input,output); // o output ficou nessa posicao do text porque  dps de copiarmos o valor pro input ele ficou como o input
+            printf("Depois do XOR\n");
             fwrite(writeOnEncFile,1,16,outputFile);
+            printf("Write on block: %s\n",(char*)writeOnEncFile);
 
             i-= 16;
 
             
-        }
+        }   
         printf("Keep Remain: %d\n",keepRemain);
         if(keepRemain > 0){
-            // TO DO padding
+            puts("ENTROU no keepremain > 0");
+            // nao era um arquivo com um numero de bytes multiplo de 16, ai temos q fazer o padding
+            // temos keepremain posicoes preenchidas - no exemplo de 25 bytes, temos 9 posicoes preenchidas 
+            fread(output,1,keepRemain,inputFile); // to lendo de um em um byte até o keepremain e vou colocar isso no buffer output
+            output[keepRemain] = 0x80; // preenchendo com o 80 em hexadecimal -> q eh 128 em decimal -  como no slide 
+            while(keepRemain < 15){ // preciso avancar ate o final do bloco de 16 bytes - vai ate 15 pq em C comecamos na posicao 0
+                // nesse while eu to na casa onde comeca o padding e preciso avancar ate o fim do bloco
+                keepRemain++; // estamos indo pra proxima posicao
+                output[keepRemain] = 0x00;
+            }
+
         }
 
         if(keepRemain == 0){
-            // se for 0 o arquivo eh multiplo de 16
+            puts("ENTROU no keepremain == 0");
+            // se o arquivo for multiplo de 16 - vamos adicionar um bloco novo para AI SIM podermos fazer o padding
+            // vamos fazer um bloco só de padding
+            uint8_t newBlock[16] = {0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // traduzindo estamos colocando 16 bytes a mais
+            strncpy((char*)output,(char*)newBlock,16); // copia para o novo conteudo de newblock -> agr o output vai ser IGUAL ao newBlock, que eh justamente um novo bloco INTEIRAMENTE NOVO CRIADO
+
         }
+         // no trecho acima nos completamos com o padding
+        // e agr temos um bloco multiplo 16 e ai podemos seguir com o esquema da criptografia
+        puts("COMECA A ULTIMA CRIPTOGRAFIA");
+        
+        AES128_Encrypt(input,key, output);
+        XorBlock(writeOnEncFile,input, output);
+        fwrite(writeOnEncFile,1,16,outputFile);
+
+        puts("CRIPTOGRAFADO PORRAAA!!!!"); // testamos com um arquivo de tamanho 25  E ele acabou criando um arquivo de tamanho 32, ou seja , 8 bytes a MAIS- por conta do 0x80
     
     }
 
@@ -145,7 +172,13 @@ char *createKey(){
         // Set the new terminal settings - configura pro terminal nao mostrar mais
         tcsetattr(STDIN_FILENO, TCSANOW, &term);
 
+
+        // vamos testar se ao setar uma chave funciona - 31st march 2023
+        //char password[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+
         //pegamos a senha aqui
+
         char *password = calloc(sizeof(char),16); // estamos separando 16 bytes
         printf("Enter password: ");
         scanf("%s", password);
