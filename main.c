@@ -65,8 +65,8 @@ void EncOFB(uint8_t Ivec[16],uint8_t key[16],char *fileNameInput,char *fileNameO
     
         //comeca pelo inicio do arquivo e procura pelo ponteiro do fim(SEEK_END) 
         fseek(inputFile, 0L, SEEK_END);
-        int fileSize = ftell(inputFile);
-        printf("SIZE OF THE FILE IN BYTES IS: %d\n",fileSize);
+        unsigned long int fileSize = ftell(inputFile);
+        //printf("SIZE OF THE FILE IN BYTES IS: %ld\n",fileSize);
 
         fseek(inputFile, 0L, SEEK_SET); // Coloca o ponteiro para o inicio do arquivo novamente
 
@@ -83,9 +83,9 @@ void EncOFB(uint8_t Ivec[16],uint8_t key[16],char *fileNameInput,char *fileNameO
         strncpy((char*)input,(char*)Ivec,16);
         //printf("input: %s\n",(char *)input);
         //printf("output: %s\n",(char *)output);
-        int i = fileSize;
+        unsigned long int i = fileSize;
         while(1){ //tem um bloco pra criptografar? porque cada bloco possui 16 bytes
-            printf("i: %d\n",i);
+            //printf("i: %ld\n",i);
         
             if(i < 16){ // precisamos ver se vai sobrar blocos menores que 16 bytes , eh isso q esse if esta fazendo
                 //imagina que tenho um arquivo de 18 bytes
@@ -95,38 +95,38 @@ void EncOFB(uint8_t Ivec[16],uint8_t key[16],char *fileNameInput,char *fileNameO
                 break; // se chegamos em um i menor q 16 ou seja - tem menos de um bloco - ele para
             }
 
-            puts("Entrou no for");
+            //puts("Entrou no for");
             // precisamos comecar a criptografar
             AES128_Encrypt(input,key,output);
             //puts("saiu do AES");
             strncpy((char*)input,(char*)output,16); // nos estamos preparando o input pra proxima interacao, o output vai ser o input da proxima interacao
-            puts("\n");
-            printf("input: %s\n",(char *)input);
-            puts("Antes do fread, chegou?\n");
+            //puts("\n");
+            //printf("input: %s\n",(char *)input);
+            //puts("Antes do fread, chegou?\n");
             // como estamos copiando o output no input, em fread nos podemos usar o output - onde vamos guardar(o buffer, basicamente)
             fread(plaintextBlock,1,16,inputFile);
             XorBlock(writeOnEncFile, plaintextBlock, output); // o output ficou nessa posicao do text porque  dps de copiarmos o valor pro input ele ficou como o input
-            printf("Depois do XOR\n");
+            //printf("Depois do XOR\n");
             fwrite(writeOnEncFile,1,16,outputFile);
-            printf("Write on block: %s\n",(char*)writeOnEncFile);
+            //printf("Write on block: %s\n",(char*)writeOnEncFile);
 
             i-= 16;
 
             
         }   
-        printf("Keep Remain: %d\n",keepRemain);
+        //printf("Keep Remain: %d\n",keepRemain);
         if(keepRemain > 0){
-            puts("ENTROU no keepremain > 0");
+            //puts("ENTROU no keepremain > 0");
             // nao era um arquivo com um numero de bytes multiplo de 16, ai temos q fazer o padding
             // temos keepremain posicoes preenchidas - no exemplo de 25 bytes, temos 9 posicoes preenchidas 
             fread(plaintextBlock,1,keepRemain,inputFile); // to lendo de um em um byte até o keepremain e vou colocar isso no buffer output
             plaintextBlock[keepRemain] = 0x80; // preenchendo com o 80 em hexadecimal -> q eh 128 em decimal -  como no slide 
-            printf("ULTIMO BLOCO ANTES DO WHILE: %x\n",plaintextBlock[keepRemain]);
+            //printf("ULTIMO BLOCO ANTES DO WHILE: %x\n",plaintextBlock[keepRemain]);
             while(keepRemain < 15){ // preciso avancar ate o final do bloco de 16 bytes - vai ate 15 pq em C comecamos na posicao 0
                 // nesse while eu to na casa onde comeca o padding e preciso avancar ate o fim do bloco
                 keepRemain++; // estamos indo pra proxima posicao
                 plaintextBlock[keepRemain] = 0x00;
-                printf("ULTIMO BLOCO FIM DO WHILE: %x\n",plaintextBlock[keepRemain]);
+                //printf("ULTIMO BLOCO FIM DO WHILE: %x\n",plaintextBlock[keepRemain]);
             }
            
 
@@ -134,20 +134,20 @@ void EncOFB(uint8_t Ivec[16],uint8_t key[16],char *fileNameInput,char *fileNameO
 
         if(keepRemain == 0){
             //precisamos adicionar um novo bloco
-            puts("ENTROU no keepremain == 0");
+            //puts("ENTROU no keepremain == 0");
             // se o arquivo for multiplo de 16 - vamos adicionar um bloco novo para AI SIM podermos fazer o padding
             // vamos fazer um bloco só de padding
             uint8_t newBlock[16] = {0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // traduzindo estamos colocando 16 bytes a mais
             strncpy((char*)plaintextBlock,(char*)newBlock,16); // copia para o novo conteudo de newblock -> agr o output vai ser IGUAL ao newBlock, que eh justamente um novo bloco INTEIRAMENTE NOVO CRIADO
 
         }
-        printf("ULTIMO BLOCO CHAR A CHAR\n");
-        for(int i =0;i < 16;i++){
-            printf("%x\n",plaintextBlock[i]);
-        }
+        //printf("ULTIMO BLOCO CHAR A CHAR\n");
+        // for(int i =0;i < 16;i++){
+        //     printf("%x\n",plaintextBlock[i]);
+        // }
         // no trecho acima nos completamos com o padding
         // e agr temos um bloco multiplo 16 e ai podemos seguir com o esquema da criptografia
-        puts("COMECA A ULTIMA CRIPTOGRAFIA");
+        //puts("COMECA A ULTIMA CRIPTOGRAFIA");
         
         AES128_Encrypt(input, key, output); // criptografa o ultimo bloco
         XorBlock(writeOnEncFile, plaintextBlock, output);
@@ -177,11 +177,9 @@ void DecOFB(uint8_t Ivec[16],uint8_t key[16],char *fileNameInput,char *fileNameO
     FILE *inputFile;
     char response = {0}; // esta setado pra nao ter lixo, vai que o lixo eh um n ou y? ai ferraria com o sistema
 
-    
-
     if(VerifyFileExist(fileNameOutput) == 0 ){
         while(response != 'y' && response != 'n'){
-            printf("\n");
+            //printf("\n");
             printf("Would you like to overwrite the file?[y/n]\n");
             scanf("%c",&response);
             fpurge(stdin);
@@ -194,8 +192,8 @@ void DecOFB(uint8_t Ivec[16],uint8_t key[16],char *fileNameInput,char *fileNameO
 
     }
 
-    inputFile = fopen(fileNameInput, "rb");
-    outputFile = fopen(fileNameOutput,"wb");
+    inputFile = fopen(fileNameInput, "rb"); // abrindo para leitura
+    outputFile = fopen(fileNameOutput,"wb"); // abrindo para escrita
         
     if(inputFile == NULL)
         printf("Could not open the file, it does not exist.\n");
@@ -204,8 +202,8 @@ void DecOFB(uint8_t Ivec[16],uint8_t key[16],char *fileNameInput,char *fileNameO
     
         //comeca pelo inicio do arquivo e procura pelo ponteiro do fim(SEEK_END) 
         fseek(inputFile, 0L, SEEK_END);
-        int fileSize = ftell(inputFile);
-        printf("SIZE OF THE FILE IN BYTES IS: %d\n",fileSize);
+        unsigned long int fileSize = ftell(inputFile);
+        //printf("SIZE OF THE FILE IN BYTES IS: %ld\n",fileSize);
 
         fseek(inputFile, 0L, SEEK_SET); // Coloca o ponteiro para o inicio do arquivo novamente
         // esse keepremain vai guardar o quanto de bytes faltam pra chegarmos 
@@ -219,26 +217,26 @@ void DecOFB(uint8_t Ivec[16],uint8_t key[16],char *fileNameInput,char *fileNameO
         strncpy((char*)input,(char*)Ivec,16); // se olharmos bem o PDF da aula, o decrypt será também com encrypt e estamos copiando o valor de IVec para input, dentro do while nos fazemos a alteracao correta, que eh copiar o output no input
         //printf("input: %s\n",(char *)input);
         //printf("output: %s\n",(char *)output);
-        int i = fileSize;
+        unsigned long int i = fileSize;
         while(i > 16){
             // > 16 pq estamos trabalhando com 16 bytes.  
             // vamos precisar mexer no ultimo bloco pra tirar o padding, aqui no decrypt
-            printf("i: %d\n",i);
+            //printf("i: %ld\n",i);
         
-            puts("Entrou no for");
+            //puts("Entrou no for");
             // precisamos comecar a criptografar
             AES128_Encrypt(input,key,output);
             //puts("saiu do AES");
             strncpy((char*)input,(char*)output,16); // nos estamos preparando o input pra proxima interacao, o output vai ser o input da proxima interacao
-            puts("\n");
-            printf("input: %s\n",(char *)input);
-            puts("Antes do fread, chegou?\n");
+            //puts("\n");
+            //printf("input: %s\n",(char *)input);
+            //puts("Antes do fread, chegou?\n");
             // como estamos copiando o output no input, em fread nos podemos usar o output - onde vamos guardar(o buffer, basicamente)
             fread(ciphertextBlock,1,16,inputFile);
             XorBlock(writeOnDecFile,ciphertextBlock,output); // o output ficou nessa posicao do text porque  dps de copiarmos o valor pro input ele ficou como o input
-            printf("Depois do XOR\n");
+            //printf("Depois do XOR\n");
             fwrite(writeOnDecFile,1,16,outputFile);
-            printf("Write on block: %s\n",(char*)writeOnDecFile);
+            //printf("Write on block: %s\n",(char*)writeOnDecFile);
 
             i-= 16; // vamos descriptografar bloco a bloco, por isso o i-=16 vai continuar
 
@@ -258,7 +256,7 @@ void DecOFB(uint8_t Ivec[16],uint8_t key[16],char *fileNameInput,char *fileNameO
         // caso contrario decrementamos o contador pra ir de tras pra frente
         int VerifyLen = 15; // o tamanho max do vetor eh 15- vetor comeca no zero
         while(VerifyLen){ // aqui estamos lendo de tras pra frente
-            printf("ULTIMO BLOCO: %x\n",writeOnDecFile[VerifyLen]);
+            //printf("ULTIMO BLOCO: %x\n",writeOnDecFile[VerifyLen]);
             if(writeOnDecFile[VerifyLen] == 0x80){
                 break;
             }
@@ -266,7 +264,7 @@ void DecOFB(uint8_t Ivec[16],uint8_t key[16],char *fileNameInput,char *fileNameO
             
 
         }
-        printf("SAI DO WHILE NO DECRYPT, ULTIMO BLOCO: %x\n",writeOnDecFile[VerifyLen]);
+        //printf("SAI DO WHILE NO DECRYPT, ULTIMO BLOCO: %x\n",writeOnDecFile[VerifyLen]);
 
         // se verifylen for diferente de zero signca que o bloco tem conteudo e padding e so vamos escrever no writeondecfile o conteudo ate verifyLen bytes
         if(VerifyLen != 0) // so escreve no novo arquivo decriptografado se nao for zero
@@ -281,8 +279,6 @@ void DecOFB(uint8_t Ivec[16],uint8_t key[16],char *fileNameInput,char *fileNameO
 
 }
 
-
-
 char *createKey(){
         struct termios term;
         // Get the current terminal settings
@@ -293,21 +289,14 @@ char *createKey(){
 
         // Set the new terminal settings - configura pro terminal nao mostrar mais
         tcsetattr(STDIN_FILENO, TCSANOW, &term);
-
-
         // vamos testar se ao setar uma chave funciona - 31st march 2023
         //char password[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-
-
         //pegamos a senha aqui
-
         char *password = calloc(sizeof(char),16); // estamos separando 16 bytes
         printf("Enter password: ");
         scanf("%s", password);
         fpurge(stdin); // estamos limpando o buffer da entrada - se nao tiver isso  aqui ele fica printando duas vezes o would you like to overwrite
-
         // Restaura as configs do terminal
-
         // Restore the original terminal settings
         term.c_lflag |= ECHO;
         tcsetattr(STDIN_FILENO, TCSANOW, &term);
@@ -333,8 +322,7 @@ int main(int argc, char **argv) {
     uint8_t output[16];
     uint8_t dec[16]; 
  
-    
-    
+
     int fileok = VerifyFileExist(argv[2]);
 
     if(fileok == 0)
@@ -358,7 +346,6 @@ int main(int argc, char **argv) {
             return 1;
         }
     
-
     }
 
     return 0;
