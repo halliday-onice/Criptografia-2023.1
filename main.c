@@ -37,8 +37,7 @@ void EncOFB(uint8_t Ivec[16],uint8_t key[16],char *fileNameInput,char *fileNameO
     // existe. 
     //    Se ele existir
     //    vamos perguntar se gostaria de sobrescrever, se nao quiser simplesmente da exit no programa
-    //    se quiser o programa vai seguir seu curso e o outputFile = fopen(fileNameOutput,"wb") vai sobrescrever
-    
+    //    se quiser o programa vai seguir seu curso e o outputFile = fopen(fileNameOutput,"wb") vai sobrescreve
    
     if(VerifyFileExist(fileNameOutput) == 0 ){
         
@@ -166,7 +165,7 @@ void EncOFB(uint8_t Ivec[16],uint8_t key[16],char *fileNameInput,char *fileNameO
 // 
 // Essa funcao vai servir para descriptografar o arquivo !
 // enquanto nao for o ultimo bloco a gnt descriptografa e escreve...(e fica nesse ciclo) até chegar ao ultimo bloco
-// NO ultimo bloco vamos ler o conteudo do arquivo criptografado, vmos pegar essa conteudo e descriptografar
+// NO ultimo bloco vamos ler o conteudo do arquivo criptografado, vmos pegar esse conteudo e descriptografar
 // antes de escrever no arquivo, vamos verificar o conteudo pra tirar o padding
 // 
 // 
@@ -186,7 +185,6 @@ void DecOFB(uint8_t Ivec[16],uint8_t key[16],char *fileNameInput,char *fileNameO
             printf("\n");
 
         } 
-        
         if(response == 'n')
             exit(1);
 
@@ -254,7 +252,7 @@ void DecOFB(uint8_t Ivec[16],uint8_t key[16],char *fileNameInput,char *fileNameO
         // ficar testando se na posicao verifyLen = 0x80 ou seja, eh nessa posicao que inicia o padding
         // se for, a gente da break e sai do while, 
         // caso contrario decrementamos o contador pra ir de tras pra frente
-        int VerifyLen = 15; // o tamanho max do vetor eh 15- vetor comeca no zero
+        int VerifyLen = 15; // o tamanho max do vetor eh 15 - vetor comeca no zero
         while(VerifyLen){ // aqui estamos lendo de tras pra frente
             //printf("ULTIMO BLOCO: %x\n",writeOnDecFile[VerifyLen]);
             if(writeOnDecFile[VerifyLen] == 0x80){
