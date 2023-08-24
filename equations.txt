@@ -1,0 +1,8 @@
+k1 = w1 XOR y4 XOR y6 XOR y7
+k2 = w2 XOR y1 XOR y2 XOR y4 XOR y5 XOR y6 XOR y7
+k3 = w3 XOR y1 XOR y3 XOR y5 XOR y6 XOR y8
+k4 = w4 XOR y5 XOR y7
+k5 = w5 XOR y1 XOR y3 XOR y4 XOR y7 XOR y8
+k6 = w6 XOR y3 XOR y6 XOR y7 XOR y8
+k7 = w7 XOR y3 XOR y5 XOR y6 XOR y7 XOR y8
+k8 = w8 XOR y2 XOR y3 XOR y4 XOR y5 XOR y6 XOR y7 XOR y8
